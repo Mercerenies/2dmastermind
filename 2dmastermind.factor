@@ -1,6 +1,6 @@
 
-USING: io ;
+USING: io 2dmastermind.cli ;
 IN: 2dmastermind
 
-: testing1 ( -- )
-    "Hello world!" print ;
+: play-game-cli ( -- )
+    play-game-default ;
