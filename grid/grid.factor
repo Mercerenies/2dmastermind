@@ -56,5 +56,8 @@ PRIVATE>
         ] "" map-as nipd
     ] map "\n" join nip ;
 
+: print-grid ( grid -- )
+    show-grid print ;
+
 : read-grid ( w h -- grid )
     dup [0,b) [ drop readln ] map concat [ CHAR: 0 - ] { } map-as -rot <grid> ;
