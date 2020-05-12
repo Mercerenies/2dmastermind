@@ -42,7 +42,7 @@ PRIVATE>
 
 : grid-put ( value x y grid -- grid )
     3dup in-bounds
-    [ clone [ pos>index ] keep [ insert-nth ] change-contents ] [ 3nip ] if ;
+    [ clone [ pos>index ] keep [ [ clone set-nth ] keep ] change-contents ] [ 3nip ] if ;
 
 : positions ( grid -- seq )
     bounds [ [0,b) ] bi@ cartesian-product concat ;
