@@ -1,6 +1,6 @@
 
 USING: 2dmastermind.grid 2dmastermind.util accessors math kernel
-sequences locals math.ranges arrays monads fry prettyprint sets hashtables
+sequences locals math.ranges arrays monads fry sets hashtables
 assocs math.order ;
 IN: 2dmastermind.matching
 
@@ -42,6 +42,8 @@ TUPLE: row-column-state
 :: possible-placements ( state value lhs rhs pair -- states )
     pair push-pair rhs grid-at :> peg
     value peg = not
+    pair push-pair lhs grid-at peg =
+    or
     [
         state 1array
     ] [
@@ -98,7 +100,7 @@ PRIVATE>
 : find-row-column-matches ( used grid grid -- used n )
     [let :> ( lhs rhs )
      0 swap rhs distinct-values
-     [ lhs rhs total-matches-for swap [ + ] dip 2dup . . ] each
+     [ lhs rhs total-matches-for swap [ + ] dip ] each
      swap
     ] ;
 

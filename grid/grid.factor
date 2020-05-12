@@ -32,6 +32,9 @@ PRIVATE>
 : bounds ( grid -- w h )
     [ width>> ] [ height>> ] bi ;
 
+: total-cells ( grid -- n )
+    bounds * ;
+
 : in-bounds ( x y grid -- ? )
     bounds
     [| x y w h | x 0 >= x w < y 0 >= y h < 4array [ ] all? ] call ;
