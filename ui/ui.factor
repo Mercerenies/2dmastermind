@@ -1,7 +1,7 @@
 
 USING: 2dmastermind.grid 2dmastermind.opponent combinators colors.constants ui
 ui.gadgets ui.render accessors math math.functions
-math.ranges math.constants math.vectors opengl
+math.ranges math.constants math.vectors math.order opengl
 opengl.gl sequences kernel arrays locals
 namespaces ;
 IN: 2dmastermind.ui
@@ -13,8 +13,12 @@ IN: 2dmastermind.ui
 
 PRIVATE>
 
-TUPLE: small-grid-gadget < gadget
+TUPLE: grid-gadget < gadget
     { grid grid } ;
+
+TUPLE: small-grid-gadget < grid-gadget ;
+
+TUPLE: interactive-grid-gadget < grid-gadget ;
 
 : to-color ( n -- color )
     {
@@ -28,10 +32,15 @@ TUPLE: small-grid-gadget < gadget
 
 CONSTANT: small-cell-size 16
 
+CONSTANT: large-cell-size 64
+
 CONSTANT: circle-steps 32
 
 : unit-vector ( rads -- v )
     [ cos ] [ sin ] bi 2array ;
+
+: min-coord ( v -- x )
+    [ first ] [ second ] bi min ;
 
 :: draw-circle ( point radius -- )
     GL_TRIANGLE_FAN glBegin
@@ -46,14 +55,17 @@ CONSTANT: circle-steps 32
 M: small-grid-gadget pref-dim*
     grid>> [ width>> small-cell-size * ] [ height>> small-cell-size * ] bi 2array ;
 
-M: small-grid-gadget draw-gadget*
-    grid>> dup positions
-    [
-        [ push-pair pick grid-at to-color gl-color ] keep
-        { 0.5 0.5 } v+ small-cell-size v*n origin get v+
-        small-cell-size 2 /
-        draw-circle
-    ] each drop ;
+M: grid-gadget draw-gadget*
+    [let [ grid>> ] [ dim>> ] bi :> ( grid dim )
+     dim grid bounds 2array v/ :> circle-dim
+     grid positions
+     [
+         [ push-pair grid grid-at to-color gl-color ] keep
+         { 0.5 0.5 } v+ circle-dim v* origin get v+
+         circle-dim min-coord 2 /
+         draw-circle
+     ] each
+    ] ;
 
 : <small-grid-gadget> ( grid -- gadget )
     \ small-grid-gadget new swap >>grid ;
