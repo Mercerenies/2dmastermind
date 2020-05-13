@@ -1,10 +1,10 @@
 
-USING: 2dmastermind.grid 2dmastermind.opponent combinators
+USING: 2dmastermind.grid 2dmastermind.opponent 2dmastermind.matching combinators
 colors.constants ui ui.gadgets ui.gadgets.packs ui.gadgets.labels
 ui.gadgets.buttons ui.gadgets.viewports ui.gadgets.scrollers ui.render
 ui.gestures accessors math math.functions math.ranges math.constants
 math.vectors math.order opengl opengl.gl sequences kernel arrays
-locals fry namespaces hashtables models ;
+locals fry namespaces hashtables models formatting ;
 QUALIFIED-WITH: ui.gadgets.grids grids
 IN: 2dmastermind.ui
 
@@ -116,6 +116,16 @@ M: history-gadget model-changed
 : <main-frame-gadget> ( -- gadget )
     \ main-frame-gadget new horizontal >>orientation ;
 
+: <matches-label> ( matches -- gadget )
+    [ exact>> ] [ row-column>> ] [ color>> ] tri
+    "Exact: %d\nRow / Column: %d\nColor: %d\n" sprintf <label> ;
+
+: <single-guess-gadget> ( guess -- gadget )
+    [ <shelf> ] dip
+    [ grid>> <small-grid-gadget> add-gadget ]
+    [ result>> <matches-label> add-gadget ]
+    bi ;
+
 : modify-control-value ( ..a control quot: ( ..a x -- ..b x ) -- ..b )
     swap [ control-value swap call ] [ set-control-value ] bi ; inline
 
@@ -125,7 +135,7 @@ M: history-gadget model-changed
 : add-to-history ( gadget guess -- )
     {
         [ swap [ swap suffix ] modify-control-value ]
-        [ grid>> <small-grid-gadget> add-gadget drop ]
+        [ <single-guess-gadget> add-gadget drop ]
         [ drop relayout-1 ]
     } 2cleave ;
 
