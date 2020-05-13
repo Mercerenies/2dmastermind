@@ -1,10 +1,10 @@
 
-USING: 2dmastermind.grid 2dmastermind.opponent 2dmastermind.matching combinators
+USING: 2dmastermind.grid 2dmastermind.opponent 2dmastermind.matching 2dmastermind.cheater combinators
 colors.constants ui ui.gadgets ui.gadgets.packs ui.gadgets.labels
 ui.gadgets.buttons ui.gadgets.viewports ui.gadgets.scrollers ui.render
 ui.gestures accessors math math.functions math.ranges math.constants
 math.vectors math.order opengl opengl.gl sequences kernel arrays
-locals fry namespaces hashtables models formatting ;
+locals fry namespaces hashtables models formatting io ;
 QUALIFIED-WITH: ui.gadgets.grids grids
 IN: 2dmastermind.ui
 
@@ -182,4 +182,6 @@ M: history-gadget model-changed
     attach-ui ;
 
 : show-ui ( -- )
-    6 4 4 generate-grid 6 4 4 generate-grid 6 make-ui "Test Window" open-window ;
+    6 4 4 generate-grid
+    cheater-mode get [ dup print-grid ] when
+    flush 6 4 4 generate-grid 6 make-ui "Test Window" open-window ;

@@ -1,6 +1,6 @@
 
-USING: 2dmastermind.grid 2dmastermind.matching 2dmastermind.opponent kernel
-accessors formatting io ;
+USING: 2dmastermind.grid 2dmastermind.matching 2dmastermind.opponent 2dmastermind.cheater kernel
+accessors formatting io namespaces ;
 IN: 2dmastermind.cli
 
 : display-matches ( matches -- )
@@ -10,7 +10,9 @@ IN: 2dmastermind.cli
     tri flush ;
 
 : play-game ( n w h -- )
-    generate-grid <game-state>
+    generate-grid
+    cheater-mode get [ dup print-grid flush ] when
+    <game-state>
     [
         dup correct-grid>> bounds read-grid make-guess
         dup display-matches
