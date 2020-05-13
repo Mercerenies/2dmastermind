@@ -1,9 +1,10 @@
 
-USING: 2dmastermind.grid 2dmastermind.opponent combinators colors.constants ui
-ui.gadgets ui.render accessors math math.functions
-math.ranges math.constants math.vectors math.order opengl
-opengl.gl sequences kernel arrays locals
-namespaces ;
+USING: 2dmastermind.grid 2dmastermind.opponent combinators
+colors.constants ui ui.gadgets ui.gadgets.packs ui.gadgets.labels
+ui.gadgets.buttons ui.gadgets.viewports ui.gadgets.scrollers ui.render
+ui.gestures accessors math math.functions math.ranges math.constants
+math.vectors math.order opengl opengl.gl sequences kernel arrays
+locals fry namespaces hashtables models ;
 IN: 2dmastermind.ui
 
 <PRIVATE
@@ -18,7 +19,15 @@ TUPLE: grid-gadget < gadget
 
 TUPLE: small-grid-gadget < grid-gadget ;
 
-TUPLE: interactive-grid-gadget < grid-gadget ;
+TUPLE: interactive-grid-gadget < grid-gadget
+    { maximum integer } ;
+
+TUPLE: history-gadget < pack ;
+
+TUPLE: main-frame-gadget < pack
+    { correct-grid grid }
+    { history history-gadget }
+    { interactive-grid interactive-grid-gadget } ;
 
 : to-color ( n -- color )
     {
@@ -52,8 +61,27 @@ CONSTANT: circle-steps 32
     ] each
     glEnd ;
 
+: next-color ( n max -- n )
+    [ 1 + ] dip mod ;
+
+: gadget-to-cell-coord ( gadget -- pair )
+    [ grid>> ] [ hand-rel push-pair ] [ dim>> push-pair ] tri
+    swapd [ / ] 2bi@
+    pick bounds swapd [ * floor ] 2bi@ 2array nip ;
+
+: on-click ( gadget -- )
+    {
+        [ maximum>> ]
+        [ gadget-to-cell-coord ]
+        [ -rot '[ [ [ _ next-color ] _ push-pair ] dip grid-modify ] change-grid ]
+        [ relayout-1 ]
+    } cleave drop ;
+
 M: small-grid-gadget pref-dim*
     grid>> [ width>> small-cell-size * ] [ height>> small-cell-size * ] bi 2array ;
+
+M: interactive-grid-gadget pref-dim*
+    grid>> [ width>> large-cell-size * ] [ height>> large-cell-size * ] bi 2array ;
 
 M: grid-gadget draw-gadget*
     [let [ grid>> ] [ dim>> ] bi :> ( grid dim )
@@ -61,14 +89,82 @@ M: grid-gadget draw-gadget*
      grid positions
      [
          [ push-pair grid grid-at to-color gl-color ] keep
-         { 0.5 0.5 } v+ circle-dim v* origin get v+
+         { 0.5 0.5 } v+ circle-dim v*
          circle-dim min-coord 2 /
          draw-circle
      ] each
     ] ;
 
+M: history-gadget model-changed
+    relayout-1 drop ;
+
+\ interactive-grid-gadget H{
+    { T{ button-down f f 1 } [ on-click ] }
+} set-gestures
+
 : <small-grid-gadget> ( grid -- gadget )
     \ small-grid-gadget new swap >>grid ;
 
+: <interactive-grid-gadget> ( grid max -- gadget )
+    \ interactive-grid-gadget new swap >>maximum swap >>grid ;
+
+: <history-gadget> ( -- gadget )
+    \ history-gadget new vertical >>orientation
+    { } <model> [ add-connection ] [ >>model ] 2bi ;
+
+: <main-frame-gadget> ( -- gadget )
+    \ main-frame-gadget new horizontal >>orientation ;
+
+: modify-control-value ( ..a control quot: ( ..a x -- ..b x ) -- ..b )
+    swap [ control-value swap call ] [ set-control-value ] bi ; inline
+
+: get-history ( gadget -- arr )
+    control-value ;
+
+: add-to-history ( gadget guess -- )
+    {
+        [ swap [ swap suffix ] modify-control-value ]
+        [ grid>> <small-grid-gadget> add-gadget drop ]
+        [ drop relayout-1 ]
+    } 2cleave ;
+
+: get-main-frame ( gadget -- frame )
+    [ main-frame-gadget? ] find-parent ;
+
+: acquire-state ( frame -- state )
+    [ correct-grid>> <game-state> ] [ history>> get-history >>guesses ] bi ;
+
+: acquire-guess ( frame -- grid )
+    interactive-grid>> grid>> ;
+
+: replace-state ( state frame -- )
+    [ [ correct-grid>> ] dip correct-grid<< ] [ [ guesses>> last ] [ history>> ] bi* swap add-to-history ] 2bi ;
+
+: make-guess-on-click ( button -- )
+    get-main-frame [ acquire-state ] [ acquire-guess ] [ [ make-guess drop ] dip replace-state ] tri ;
+
+: make-main-panel ( grid max -- gadget )
+    {
+        [ <interactive-grid-gadget> ]
+        [ 2drop "Make Guess" <label> [ make-guess-on-click ] <border-button> ]
+    } 2cleave 2array
+    <pile> swap add-gadgets ;
+
+: make-history-panel ( -- gadget )
+    <history-gadget> <scroller> ;
+
+:: attach-ui ( correct-grid panel history frame -- frame )
+    frame panel add-gadget history add-gadget
+    0 panel nth-gadget >>interactive-grid
+    history viewport>> 0 swap nth-gadget >>history
+    correct-grid >>correct-grid ;
+
+: make-ui ( correct-grid grid max -- gadget )
+    {
+        [ make-main-panel ]
+        [ 2drop make-history-panel ]
+    } 2cleave
+    <main-frame-gadget> attach-ui ;
+
 : show-ui ( -- )
-    6 4 4 generate-grid <small-grid-gadget> "Test Window" open-window ;
+    6 4 4 generate-grid 6 4 4 generate-grid 6 make-ui "Test Window" open-window ;

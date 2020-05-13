@@ -47,6 +47,9 @@ PRIVATE>
     3dup in-bounds
     [ clone [ pos>index ] keep [ clone [ set-nth ] keep ] change-contents ] [ 3nip ] if ;
 
+: grid-modify ( quot: ( z -- z ) x y grid -- grid )
+    [ grid-at swap call ] [ grid-put ] 3bi ; inline
+
 : positions ( grid -- seq )
     bounds [ [0,b) ] bi@ cartesian-product concat ;
 
