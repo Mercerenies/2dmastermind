@@ -84,6 +84,9 @@ M: small-grid-gadget pref-dim*
 M: interactive-grid-gadget pref-dim*
     grid>> [ width>> large-cell-size * ] [ height>> large-cell-size * ] bi 2array ;
 
+M: history-gadget pref-dim*
+    call-next-method 3 large-cell-size * large-cell-size 2array [ max ] 2map ;
+
 M: grid-gadget draw-gadget*
     [let [ grid>> ] [ dim>> ] bi :> ( grid dim )
      dim grid bounds 2array v/ :> circle-dim
