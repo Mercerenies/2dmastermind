@@ -5,6 +5,7 @@ ui.gadgets.buttons ui.gadgets.viewports ui.gadgets.scrollers ui.render
 ui.gestures accessors math math.functions math.ranges math.constants
 math.vectors math.order opengl opengl.gl sequences kernel arrays
 locals fry namespaces hashtables models ;
+QUALIFIED-WITH: ui.gadgets.grids grids
 IN: 2dmastermind.ui
 
 <PRIVATE
@@ -153,8 +154,9 @@ M: history-gadget model-changed
 : make-history-panel ( -- gadget )
     <history-gadget> <scroller> ;
 
-:: attach-ui ( correct-grid panel history frame -- frame )
-    frame panel add-gadget history add-gadget
+:: attach-ui ( correct-grid panel history -- frame )
+    <main-frame-gadget> :> frame
+    frame panel history 2array 1array grids:<grid> add-gadget
     0 panel nth-gadget >>interactive-grid
     history viewport>> 0 swap nth-gadget >>history
     correct-grid >>correct-grid ;
@@ -164,7 +166,7 @@ M: history-gadget model-changed
         [ make-main-panel ]
         [ 2drop make-history-panel ]
     } 2cleave
-    <main-frame-gadget> attach-ui ;
+    attach-ui ;
 
 : show-ui ( -- )
     6 4 4 generate-grid 6 4 4 generate-grid 6 make-ui "Test Window" open-window ;
